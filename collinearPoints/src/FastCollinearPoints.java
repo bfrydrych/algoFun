@@ -8,18 +8,24 @@ public class FastCollinearPoints {
     private LineSegment[] lineSegments;
     private int numOfSegments = 0;
 
-    public FastCollinearPoints(Point[] points) {
+    public FastCollinearPoints(Point[] pointsInput) {
 
-        if (points == null) {
+        if (pointsInput == null) {
             throw new IllegalArgumentException();
         }
-        for (int i = 0; i < points.length; ++i) {
-            if (points[i] == null) {
+
+        //copy and check for null
+        Point[] points = new Point[pointsInput.length];
+        for (int i = 0; i < pointsInput.length; ++i) {
+            if (pointsInput[i] == null) {
                 throw new IllegalArgumentException();
             }
+            points[i] = pointsInput[i];
         }
+        // DEBUG
+        //printSuppliedPoints(points);
 
-        lineSegments = new LineSegment[points.length * 4];
+        LineSegment[] lineSegmentsTmp = new LineSegment[points.length * 4];
         int nextSegmentIndex = 0;
 
         for (int i = 0; i < points.length; ++i) {
@@ -52,8 +58,14 @@ public class FastCollinearPoints {
                     // slope differs, point is not collinear
                     if (sameSlopeNr + 1 >= 3) {
                         // create a segment if same slopes found
-                        LineSegment lineSegment = new LineSegment(points[i], sameSlopes[sameSlopesIndex]);
-                        lineSegments[nextSegmentIndex++] = lineSegment;
+                        Point[] finalSameSlopes = new Point[sameSlopesIndex + 2];
+                        // add p to final same slopes
+                        finalSameSlopes[0] = points[i];
+                        System.arraycopy(sameSlopes, 0, finalSameSlopes, 1, sameSlopesIndex + 1);
+                        // sort same slopes together with p
+                        Arrays.sort(finalSameSlopes);
+                        LineSegment lineSegment = new LineSegment(finalSameSlopes[0], finalSameSlopes[sameSlopesIndex + 1]);
+                        lineSegmentsTmp[nextSegmentIndex++] = lineSegment;
                         numOfSegments++;
                     }
                     // reset same slopes list
@@ -61,10 +73,34 @@ public class FastCollinearPoints {
                     sameSlopesIndex = 0;
                     sameSlopeNr = 0;
                 }
+                // end of toCompare list. need to check same slopes again before exit
+                if (j == toCompare.length - 1 && sameSlopeNr + 1 >= 3) {
+                    // create a segment if same slopes found
+                    Point[] finalSameSlopes = new Point[sameSlopesIndex + 2];
+                    finalSameSlopes[0] = points[i];
+                    System.arraycopy(sameSlopes, 0, finalSameSlopes, 1, sameSlopesIndex + 1);
+                    Arrays.sort(finalSameSlopes);
+                    LineSegment lineSegment = new LineSegment(finalSameSlopes[0], finalSameSlopes[sameSlopesIndex + 1]);
+                    lineSegmentsTmp[nextSegmentIndex++] = lineSegment;
+                    numOfSegments++;
+                }
             }
         }
-
+        lineSegments = new LineSegment[numOfSegments];
+        System.arraycopy(lineSegmentsTmp, 0, lineSegments, 0, numOfSegments);
     }     // finds all line segments containing 4 or more points
+
+    private void printSuppliedPoints(Point[] points) {
+        String pointsSupplied = "{";
+        for (int i = 0; i < points.length; ++i) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException();
+            }
+            pointsSupplied = pointsSupplied + "new Point" + points[i] + ",";
+        }
+        pointsSupplied = pointsSupplied + "};";
+        System.out.println(pointsSupplied);
+    }
 
     public int numberOfSegments() {
         return numOfSegments;
@@ -72,7 +108,9 @@ public class FastCollinearPoints {
 
 
     public LineSegment[] segments() {
-        return lineSegments;
+        LineSegment[] toReturn = new LineSegment[lineSegments.length];
+        System.arraycopy(lineSegments, 0, toReturn, 0, lineSegments.length);
+        return toReturn;
     }                // the line segments
 
     public static void main(String[] args) {

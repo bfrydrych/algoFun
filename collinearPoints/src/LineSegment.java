@@ -1,3 +1,5 @@
+import javax.sound.sampled.Line;
+
 public class LineSegment {
 
     private Point p;
@@ -17,4 +19,10 @@ public class LineSegment {
     public String toString() {
         return "P: " + p.toString() + " Q: " + q.toString();
     }                    // string representation
+
+    @Override
+    public boolean equals(Object obj) {
+        LineSegment ls =  (LineSegment) obj;
+        return p.compareTo(ls.p) == 0 && q.compareTo(ls.q) == 0;
+    }
 }
